@@ -3,14 +3,17 @@ using UnityEngine;
 
 public class Environment : MonoBehaviour
 {
+  private static readonly int VIEW_DISTANCE = 1;
   public GameObject player;
   public GameObject chunkPrefab;
   private Dictionary<ChunkPos, Chunk> loadedChunks;
+  public int seed;
 
   void Start()
   {
     Application.targetFrameRate = 60;
 
+    seed = Random.Range(0, 10_000);
     loadedChunks = new Dictionary<ChunkPos, Chunk>();
 
     var spawnPos = createSpawnPosition();
@@ -48,11 +51,12 @@ public class Environment : MonoBehaviour
   
     var position = new Vector3
     {
-      x = pos.x * (Chunk.CHUNK_SIZE / 2),
+      x = pos.x * Chunk.CHUNK_SIZE,
       y = 0F,
-      z = pos.z * (Chunk.CHUNK_SIZE / 2)
+      z = pos.z * Chunk.CHUNK_SIZE
     };
 
+//     Debug.Log("chunk pos: (" + pos.x + ", " + pos.z + ") - absolute pos: (" + position.x + ", " + position.z + ")");
     chunkGameObject.transform.position = position;
     return chunk;
   }
@@ -88,19 +92,32 @@ public class Environment : MonoBehaviour
     var playerPos = player.transform.position;
     var playerChunkPos = new ChunkPos
     {
-      x = (int) playerPos.x / 32,
-      z = (int) playerPos.z / 32
+      x = (int) playerPos.x >> 4,
+      z = (int) playerPos.z >> 4
     };
+//     Debug.Log("(" + playerChunkPos.x + ", " + playerChunkPos.z + ")");
 
-    /* check if the chunk is loaded, otherwise generate it. */
-    if (loadedChunks.ContainsKey(playerChunkPos))
+    /* load chunks around the player's chunk */
+    for (int xx = playerChunkPos.x - VIEW_DISTANCE; xx < playerChunkPos.x + VIEW_DISTANCE; xx++)
     {
-      return;
-    }
+      for (int zz = playerChunkPos.z - VIEW_DISTANCE; zz < playerChunkPos.z + VIEW_DISTANCE; zz++)
+      {
+        var chunkPos = new ChunkPos
+        {
+          x = xx,
+          z = zz
+        };
 
-    /* create a fresh chunk */
-    var chunk = createChunk(playerChunkPos);
-    loadedChunks.Add(playerChunkPos, chunk);
+        if (loadedChunks.ContainsKey(chunkPos))
+        {
+          continue;
+        }
+
+        /* create a fresh chunk */
+        var chunk = createChunk(chunkPos);
+        loadedChunks.Add(chunk.pos, chunk);
+      }
+    }
   }
 }
 

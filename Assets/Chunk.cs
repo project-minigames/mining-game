@@ -62,7 +62,7 @@ public class Chunk : MonoBehaviour
       {
         for (int z = 0; z < CHUNK_SIZE; z++)
         {
-          ProcessVoxel(x, y, z);
+          ProcessVoxel(x, y, z, getVoxelRelative(x, y, z).type);
         }
       }
     }
@@ -85,24 +85,28 @@ public class Chunk : MonoBehaviour
 
   private void CreateVoxels()
   {
-    Debug.Log("(" + pos.x + ", " + pos.z + ")");
-
     for (int x = 0; x < CHUNK_SIZE; x++)
     {
       for (int y = 0; y < CHUNK_HEIGHT; y++)
       {
         for (int z = 0; z < CHUNK_SIZE; z++)
         {
-          float xCoord = ((pos.x * CHUNK_SIZE) + x) / 12F;
-          float yCord = y / 24F;
-          float zCoord = ((pos.z * CHUNK_SIZE) + z) / 12F;
-          float noiseValue = PerlinNoise3D(xCoord, yCord, zCoord);
+          var position = new Vector3(x, y, z);
+
+          if (y <= 3) {
+            voxels[x, y, z] = new Voxel(absolutePos + position, VoxelType.OBSIDIAN);
+            continue;
+          }
+
+          float xCoord = ((pos.x * CHUNK_SIZE) + x) / 16F;
+          float yCord = y / 20F;
+          float zCoord = ((pos.z * CHUNK_SIZE) + z) / 16F;
+          float noiseValue = PerlinNoise3D(xCoord + environment.seed, yCord, zCoord + environment.seed);
           //           Debug.Log(noiseValue);
 
           if (noiseValue > VOXEL_NOISE_THRESHOLD)
           {
-            var position = new Vector3(x, y, z);
-            var newVoxel = new Voxel(absolutePos + position, VoxelType.STONE);
+            var newVoxel = new Voxel(absolutePos + position, x % 2 == 0 ? VoxelType.STONE : VoxelType.OBSIDIAN);
 
             voxels[x, y, z] = newVoxel;
             //             Instantiate(environment.stoneVoxel, position, Quaternion.identity);
@@ -112,7 +116,7 @@ public class Chunk : MonoBehaviour
     }
   }
 
-  private void ProcessVoxel(int x, int y, int z)
+  private void ProcessVoxel(int x, int y, int z, VoxelType type)
   {
     // Check if the voxels array is initialized and the indices are within bounds
     if (voxels == null || x < 0 || x >= voxels.GetLength(0) ||
@@ -137,12 +141,41 @@ public class Chunk : MonoBehaviour
       for (int i = 0; i < facesVisible.Length; i++)
       {
         if (facesVisible[i])
-          AddFaceData(x, y, z, i); // Method to add mesh data for the visible face
+          AddFaceData(x, y, z, i, type); // Method to add mesh data for the visible face
       }
     }
   }
 
-  private void AddFaceData(int x, int y, int z, int faceIndex)
+  Vector2 getUVOriginIndex(VoxelType type) {
+    var typeId = (int) type - 1;
+
+    /**
+     * The UV texture is currently 64px × 64px.
+     *
+     * (0, 0) is the bottom-left corner
+     * (0, 1) is the bottom-right corner
+     * (1, 0) is the top-left corner
+     * (1, 1) is the top-right corner
+     */
+    return new Vector2((typeId * 32) / 128F, 0);
+  }
+
+  Vector2 getUVBoundsIndex(VoxelType type) {
+    var typeId = (int) type - 1;
+
+    /**
+     * The UV texture is currently 64px × 64px.
+     *
+     * (0, 0) is the bottom-left corner
+     * (0, 1) is the bottom-right corner
+     * (1, 0) is the top-left corner
+     * (1, 1) is the top-right corner
+     */
+    return new Vector2(((typeId * 32) + 32) / 128F, 1);
+  }
+
+
+  private void AddFaceData(int x, int y, int z, int faceIndex, VoxelType type)
   {
     // Based on faceIndex, determine vertices and triangles
     // Add vertices and triangles for the visible face
@@ -154,6 +187,17 @@ public class Chunk : MonoBehaviour
       vertices.Add(new Vector3(x, y + 1, z + 1));
       vertices.Add(new Vector3(x + 1, y + 1, z + 1));
       vertices.Add(new Vector3(x + 1, y + 1, z));
+
+      /*
+      Vector2 tempUV0 = getUVOriginIndex(type);
+      Vector2 tempUV1 = getUVBoundsIndex(type);
+
+      uvs.Add(new Vector2(tempUV0.x, tempUV0.y));
+      uvs.Add(new Vector2(tempUV1.x, tempUV0.y));
+      uvs.Add(new Vector2(tempUV0.x, tempUV1.y));
+      uvs.Add(new Vector2(tempUV1.x, tempUV1.y));
+       */
+
       uvs.Add(new Vector2(0, 0));
       uvs.Add(new Vector2(1, 0));
       uvs.Add(new Vector2(1, 1));
@@ -166,6 +210,7 @@ public class Chunk : MonoBehaviour
       vertices.Add(new Vector3(x + 1, y, z));
       vertices.Add(new Vector3(x + 1, y, z + 1));
       vertices.Add(new Vector3(x, y, z + 1));
+      
       uvs.Add(new Vector2(0, 0));
       uvs.Add(new Vector2(0, 1));
       uvs.Add(new Vector2(1, 1));

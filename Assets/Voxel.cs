@@ -18,7 +18,7 @@ public enum VoxelType
 {
   AIR,
   STONE,
-  GRASS,
+  OBSIDIAN,
   IRON_ORE,
   SILVER_ORE,
   GOLD_ORE
