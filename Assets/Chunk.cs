@@ -54,30 +54,6 @@ public class Chunk : MonoBehaviour
     ConstructMesh();
   }
 
-  /*
-    void OnDrawGizmos()
-    {
-      if (voxels != null)
-      {
-        for (int x = 0; x < CHUNK_SIZE; x++)
-        {
-          for (int y = 0; y < CHUNK_HEIGHT; y++)
-          {
-            for (int z = 0; z < CHUNK_SIZE; z++)
-            {
-              var value = voxels[x, y, z];
-              if (value is Voxel voxel)
-              {
-                Gizmos.color = voxel.color;
-                Gizmos.DrawCube(transform.position + new Vector3(x, y, z), Vector3.one);
-              }
-            }
-          }
-        }
-      }
-    }
-    */
-
   void ConstructMesh()
   {
     for (int x = 0; x < CHUNK_SIZE; x++)
