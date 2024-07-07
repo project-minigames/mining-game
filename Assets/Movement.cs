@@ -8,19 +8,13 @@ public class Movement : MonoBehaviour
   private float yaw = 0F;
   private float pitch = 0F;
 
-  void Update()
+  void Balls()
   {
-    /* world position */
-    velocity = new Vector2(
-      Input.GetAxisRaw("Horizontal"),
-      Input.GetAxisRaw("Vertical")
-    );
-    transform.Translate(velocity * speed * Time.deltaTime);
-
-    /* camera movement */
+    /* camera movement 
     yaw += lookSpeed * Input.GetAxis("Mouse X");
     pitch -= lookSpeed * Input.GetAxis("Mouse Y");
 
     transform.eulerAngles = new Vector3(pitch, yaw, 0F);
+    */
   }
 }
